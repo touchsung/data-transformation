@@ -3,7 +3,7 @@ import { UserTransformer } from './transformers/userTransformer';
 
 const processUsers = async () => {
   const users = await UserService.getUsers();
-  return UserTransformer.updateAgeRanges(UserTransformer.transform(users), users);
+  return UserTransformer.transform(users);
 };
 
 const main = async () => {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { UserTransformer } from '../userTransformer';
+import { UserTransformer, countGender, calculateAgeRange, processHair, processAddressUser, filterByDepartment } from '../userTransformer';
 import { User } from '../../types/user';
 
 describe('UserTransformer', () => {
@@ -182,7 +182,7 @@ describe('UserTransformer', () => {
         Engineering: {
           male: 1,
           female: 1,
-          ageRange: '',
+          ageRange: '25-30',
           hair: {
             brown: 1,
             blonde: 1
@@ -195,7 +195,7 @@ describe('UserTransformer', () => {
         Sales: {
           male: 1,
           female: 0,
-          ageRange: '',
+          ageRange: '45-45',
           hair: {
             brown: 1
           },
@@ -212,54 +212,79 @@ describe('UserTransformer', () => {
     });
   });
 
-  describe('updateAgeRanges', () => {
-    it('should correctly calculate age ranges for each department', () => {
-      const groupedData = UserTransformer.transform(mockUsers);
-      const result = UserTransformer.updateAgeRanges(groupedData, mockUsers);
-
-      expect(result.Engineering.ageRange).toBe('25-30');
-      expect(result.Sales.ageRange).toBe('45-45');
-    });
-
-    it('should handle empty department', () => {
-      const result = UserTransformer.updateAgeRanges({
-        Engineering: {
-          male: 0,
-          female: 0,
-          ageRange: '',
-          hair: {},
-          addressUser: {}
-        }
-      }, []);
-
-      expect(result.Engineering.ageRange).toBe('');
-    });
-  });
-
   describe('helper functions', () => {
-    it('should correctly count hair colors', () => {
-      const result = UserTransformer.transform(mockUsers);
-      
-      expect(result.Engineering.hair).toEqual({
-        brown: 1,
-        blonde: 1
+
+    describe('filterByDepartment', () => {
+      it('should correctly filter users by department', () => {
+        const result = filterByDepartment(mockUsers, 'Engineering');
+        expect(result).toEqual(mockUsers.filter(u => u.company.department === 'Engineering'));
       });
-      expect(result.Sales.hair).toEqual({
-        brown: 1
+    }); 
+
+    describe('countGender', () => {
+      it('should correctly count gender distribution', () => {
+        const result = countGender(mockUsers.filter(u => u.company.department === 'Engineering'));
+        expect(result).toEqual({
+          male: 1,
+          female: 1
+        });
+      });
+
+      it('should handle empty users array', () => {
+        const result = countGender([]);
+        expect(result).toEqual({
+          male: 0,
+          female: 0
+        });
       });
     });
 
-    it('should correctly count gender distribution', () => {
-      const result = UserTransformer.transform(mockUsers);
-      
-      expect(result.Engineering).toMatchObject({
-        male: 1,
-        female: 1
+    describe('calculateAgeRange', () => {
+      it('should calculate correct age range for multiple users', () => {
+        const result = calculateAgeRange(mockUsers.filter(u => u.company.department === 'Engineering'));
+        expect(result.ageRange).toBe('25-30');
       });
-      expect(result.Sales).toMatchObject({
-        male: 1,
-        female: 0
+
+      it('should handle single user', () => {
+        const result = calculateAgeRange([mockUsers[0]]);
+        expect(result.ageRange).toBe('30-30');
+      });
+
+      it('should handle empty users array', () => {
+        const result = calculateAgeRange([]);
+        expect(result.ageRange).toBe('');
+      });
+    });
+
+    describe('processHair', () => {
+      it('should correctly count hair colors', () => {
+        const result = processHair(mockUsers.filter(u => u.company.department === 'Engineering'));
+        expect(result.hair).toEqual({
+          brown: 1,
+          blonde: 1
+        });
+      });
+
+      it('should handle empty users array', () => {
+        const result = processHair([]);
+        expect(result.hair).toEqual({});
+      });
+    });
+
+    describe('processAddressUser', () => {
+      it('should correctly map users to postal codes', () => {
+        const result = processAddressUser(mockUsers.filter(u => u.company.department === 'Engineering'));
+        expect(result.addressUser).toEqual({
+          JohnDoe: '12345',
+          JaneSmith: '67890'
+        });
+      });
+
+      it('should handle empty users array', () => {
+        const result = processAddressUser([]);
+        expect(result.addressUser).toEqual({});
       });
     });
   });
+
 }); 
